@@ -63,6 +63,18 @@ sns.boxplot(x="stroke", y="avg_glucose_level", data=stroke_df)
 plt.title("Average glucose levels and likelihood of stroke")
 plt.show()
 
+# Create a correlation matrix
+corr_matrix = stroke_df.corr(numeric_only=True)
+# Create a heatmap using seaborn
+fig, ax = plt.subplots(figsize=(10, 8))
+sns.heatmap(corr_matrix, cmap='coolwarm', annot=True, ax=ax)
+# Set the title and axis labels
+ax.set_title('Correlation Heatmap')
+ax.set_xlabel('Features')
+ax.set_ylabel('Features')
+# Show the plot
+plt.show()
+
 from sklearn.preprocessing import LabelEncoder
 le = LabelEncoder()
 # fit the label encoder to the ever_married column
@@ -100,8 +112,7 @@ print(stroke_df.head())
 # Get the count of gender value "Other"
 count = stroke_df[stroke_df['gender'] == 2]['gender'].count()
 print("Count of gender value 2:", count)
-# Create a correlation matrix
-corr_matrix = stroke_df.corr(numeric_only=True)
+
 
 # Create a heatmap using seaborn
 fig, ax = plt.subplots(figsize=(10, 8))
@@ -173,9 +184,9 @@ dt_fpr, dt_tpr, _ = roc_curve(y_test, dt_pred)
 dt_auc = auc(dt_fpr, dt_tpr)
 
 # plot the ROC curves
-plt.plot(rf_fpr, rf_tpr, label='Deciaion Tree (AUC = %0.2f)' % rf_auc)
+plt.plot(rf_fpr, rf_tpr, label='Deciaion Tree (AUC = %0.2f)' % dt_auc)
 plt.plot(lr_fpr, lr_tpr, label='Logistic Regression (AUC = %0.2f)' % lr_auc)
-plt.plot(dt_fpr, dt_tpr, label='Random Forest (AUC = %0.2f)' % dt_auc)
+plt.plot(dt_fpr, dt_tpr, label='Random Forest (AUC = %0.2f)' % rt_auc)
 plt.plot([0, 1], [0, 1], 'k--')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
