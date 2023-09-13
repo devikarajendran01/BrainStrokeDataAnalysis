@@ -1,0 +1,186 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
+%matplotlib inline
+
+# Reading dataset from the csv file
+stroke_df = pd.read_csv('/Users/devikarajendran/Desktop/MS-DataAnalytics/MIS581/Module6/healthcare-dataset-stroke-data.csv')
+
+# Display the dataset
+print(stroke_df.head())
+ 
+
+
+# Drop the "id" column from the dataset
+stroke_df = stroke_df.drop('id', axis=1)
+
+# Replacing unknown with np.nan
+stroke_rep = stroke_df['smoking_status'].replace('Unknown',np.nan)
+stroke_df['smoking_status'] = stroke_rep
+stroke_df.isnull().sum()
+ 
+
+# Replace null BMI values with the mean of the non-null BMI values
+mean_bmi = np.mean(stroke_df['bmi'][stroke_df['bmi'].notnull()])
+stroke_df['bmi'] = stroke_df['bmi'].fillna(mean_bmi)
+stroke_df.isnull().sum()
+
+# Generates descriptive statistics
+stroke_df.describe()
+
+# Stroke distribution by age
+age_data = stroke_df['age'][stroke_df['stroke'] == 1]
+plt.hist(age_data, bins=20)
+plt.title('Stroke distribution by age')
+plt.xlabel('Age')
+plt.ylabel('Frequency')
+plt.show()
+
+# Boxplot to show patient age and stroke grouped by gender
+sns.boxplot(x="gender", y="age", hue="stroke", data=stroke_df)
+plt.title("Patient age and stroke grouped by gender")
+plt.show()
+
+ sns.boxplot(x="hypertension", y="age", hue="stroke", data=stroke_df)
+plt.title("Patient age and stroke grouped by hypertension status")
+plt.show()
+ gender_data = stroke_df[stroke_df['stroke'] == 1]['gender']
+gender_group_1 = len(gender_data[gender_data == 'Male'])
+gender_group_2 = len(gender_data[gender_data == 'Female'])
+gender_group_sizes = [gender_group_1, gender_group_2]
+gender_groups = ['Male', 'Female']
+fig, ax = plt.subplots(figsize=(8, 5), subplot_kw=dict(aspect="equal"))
+wedges, texts, autotexts = ax.pie(gender_group_sizes, autopct='%1.1f%%', textprops=dict(color="w"))
+ax.legend(wedges, gender_groups, title="Gender", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+plt.setp(texts, size=10, weight="bold")
+plt.setp(autotexts, size=10, weight="bold")
+ax.set_title("Gender distribution of patients with stroke")
+plt.show()
+sns.boxplot(x="stroke", y="avg_glucose_level", data=stroke_df)
+plt.title("Average glucose levels and likelihood of stroke")
+plt.show()
+
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+# fit the label encoder to the ever_married column
+le.fit(stroke_df['ever_married'])
+# transform the ever_married column to numerical values
+stroke_df['ever_married'] = le.transform(stroke_df['ever_married'])
+
+stroke_df['Residence_type'] = stroke_df['Residence_type'].map({'Urban':1,'Rural':0})
+stroke_df.head()
+
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+# fit the label encoder to the ever_married column
+le.fit(stroke_df['gender'])
+# transform the ever_married column to numerical values
+stroke_df['gender'] = le.transform(stroke_df['gender'])
+stroke_df['gender'].unique()
+
+from sklearn.preprocessing import OneHotEncoder
+import pandas as pd
+# create the OneHotEncoder object
+encoder = OneHotEncoder()
+# transform the work_type column to integer values
+work_type_encoded = encoder.fit_transform(stroke_df.work_type.values.reshape(-1,1)).toarray()
+work_type_encoded
+# create a new DataFrame for the encoded values
+work_type_df = pd.DataFrame(work_type_encoded, columns=encoder.categories_[0])
+# merge the new DataFrame with the original DataFrame
+stroke_df = pd.merge(stroke_df, work_type_df, left_index=True, right_index=True)
+# drop the original work_type column
+stroke_df = stroke_df.drop('work_type', axis=1)
+# print the first 5 rows of the updated DataFrame
+print(stroke_df.head())
+
+# Get the count of gender value "Other"
+count = stroke_df[stroke_df['gender'] == 2]['gender'].count()
+print("Count of gender value 2:", count)
+# Create a correlation matrix
+corr_matrix = stroke_df.corr(numeric_only=True)
+
+# Create a heatmap using seaborn
+fig, ax = plt.subplots(figsize=(10, 8))
+sns.heatmap(corr_matrix, cmap='coolwarm', annot=True, ax=ax)
+# Set the title and axis labels
+ax.set_title('Correlation Heatmap')
+ax.set_xlabel('Features')
+ax.set_ylabel('Features')
+# Show the plot
+plt.show()
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
+from sklearn.metrics import classification_report, confusion_matrix,accuracy_score
+
+
+# create the feature matrix and target variable
+X = stroke_df.drop('stroke', axis=1)
+y = stroke_df['stroke']
+# split the data into a 70/30 train/test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state = 42)
+
+# create the Random Forest model
+rf_model = RandomForestClassifier()
+rf_model.fit(X_train, y_train)
+rf_pred = rf_model.predict(X_test)
+rf_acc = accuracy_score(y_test, rf_pred)
+print("Random Forest Model")
+print("Random Forest accuracy:", rf_acc)
+y_preds = rf_model.predict(X_test)
+print(classification_report(y_test, y_preds))
+
+# create the Logistic Regression model
+lr_model = LogisticRegression(random_state=42)
+lr_model.fit(X_train, y_train)
+lr_pred = lr_model.predict(X_test)
+lr_acc = accuracy_score(y_test, lr_pred)
+print("Logistic Regression Model")
+print("Logistic Regression accuracy:", lr_acc)
+y_preds = lr_model.predict(X_test)
+print(classification_report(y_test, y_preds))
+
+# create the Decision Tree model
+dt_model = DecisionTreeClassifier(random_state=42)
+dt_model.fit(X_train, y_train)
+dt_pred = dt_model.predict(X_test)
+dt_acc = accuracy_score(y_test, dt_pred)
+print("Decision Tree")
+print("Decision Tree accuracy:", dt_acc)
+y_preds = dt_model.predict(X_test)
+print(classification_report(y_test, y_preds))
+
+from sklearn.metrics import roc_curve, auc
+# Calculate the False Positive Rate (FPR) and True Positive Rate (TPR)
+# Random Forest model
+rf_fpr, rf_tpr, _ = roc_curve(y_test, rf_pred)
+rf_auc = auc(rf_fpr, rf_tpr)
+
+# Logistic Regression model
+lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_pred)
+lr_auc = auc(lr_fpr, lr_tpr)
+
+# Decision Tree model
+dt_fpr, dt_tpr, _ = roc_curve(y_test, dt_pred)
+dt_auc = auc(dt_fpr, dt_tpr)
+
+# plot the ROC curves
+plt.plot(rf_fpr, rf_tpr, label='Deciaion Tree (AUC = %0.2f)' % rf_auc)
+plt.plot(lr_fpr, lr_tpr, label='Logistic Regression (AUC = %0.2f)' % lr_auc)
+plt.plot(dt_fpr, dt_tpr, label='Random Forest (AUC = %0.2f)' % dt_auc)
+plt.plot([0, 1], [0, 1], 'k--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic')
+plt.legend(loc="lower right")
+plt.show()
